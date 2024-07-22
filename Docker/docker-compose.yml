@@ -1,0 +1,25 @@
+version: '3'
+services:
+  sisyphus_mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1435:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Test123#"
+      TZ: Europa/Berlin
+    container_name: sisyphus_mssql
+    hostname: sisyphus_mssql
+  
+  sisyphus_server:
+    build: ../SisyphusServer
+    environment:
+      TZ: Europa/Berlin
+    volumes:
+      - $DOCKER_PATH/SisyphusServer/:/var/log/SisyphusServer
+    expose:
+      - "80"
+    ports:
+      - "5001:8080"
+    depends_on:
+      - sisyphus_mssql

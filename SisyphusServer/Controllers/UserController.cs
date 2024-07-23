@@ -18,11 +18,21 @@ namespace SisyphusServer.Controllers {
         }
 
         [HttpPost("{userid}/{points:long}")]
+        [ProducesResponseType(typeof(List<UserInfo>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<UserInfo>> AddOrUpdateUser(string userid, long points) {
             return await Sender.Send(new AddOrUpdateUserCommand { 
                 UserId = userid,
                 Points = points
             });
+        }
+
+        [HttpDelete]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> ResetDatabase() {
+            await Sender.Send(new ResetDatabaseCommand());
+            return NoContent();
         }
     }
 }

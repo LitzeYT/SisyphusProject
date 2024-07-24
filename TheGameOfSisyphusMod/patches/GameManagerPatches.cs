@@ -4,88 +4,80 @@ using System.Threading.Tasks;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
-using Logger = BepInEx.Logging.Logger;
+using Newtonsoft.Json;
+using System.Numerics;
 
 namespace TheGameOfSisyphusMod.patches
 {
     [HarmonyPatch(typeof(GameManager))]
     public class GameManagerPatches
     {
-        private static GameObject _rock;
-        private static ManualLogSource logger;
-        private static HttpClient client;
-        private static string userId = "hardcodedUserID"; // Hardcoded UserID
-        private static float lastUpdate;
-        private static bool initialized;
-        private static float updateInterval = 2.0f;
+        private static GameObject _emeraldRock;
+        private static readonly HttpClient client = new HttpClient();
 
         [HarmonyPatch("GenerateBall")]
         [HarmonyPostfix]
         public static void GenerateBall_postfix()
         {
-            // Log the ball generation
-            if (!initialized)
-            {
-                logger = new ManualLogSource("TheGameOfSisyphusMod");
-                Logger.Sources.Add(logger);
-                client = new HttpClient();
-                initialized = true;
-            }
+            //log the ball generation
+            ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
+            Logger.Sources.Add(logger);
 
             logger.LogInfo("Ball generated");
 
-            // Find Rock(Clone) and log its position
-            GameObject rock = GameObject.Find("EmeraldRock(Clone)");
-
-            if (rock != null)
+            //find EmeraldRock(Clone) and log its position
+            GameObject emeraldRock = GameObject.Find("EmeraldRock(Clone)");
+            if (emeraldRock != null && _emeraldRock == null)
             {
-                logger.LogInfo($"Rock position: {rock.transform.position.y}");
-            }
-
-            if (rock != null && _rock == null)
-            {
-                _rock = rock;
-                Task.Run(() => NotifyBallGenerated());
-            }
-        }
-
-        private static async Task NotifyBallGenerated()
-        {
-            logger.LogInfo("Notifying server of ball generation.");
-            var content = new StringContent($"{{\"userId\": \"{userId}\", \"points\": {_rock.transform.position.y}}}", Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("http://91.107.224.122:5001/api/v1/User", content);
-            if (response.IsSuccessStatusCode)
-            {
-                logger.LogInfo("Server notified of ball generation.");
-            }
-            else
-            {
-                logger.LogError("Failed to notify server of ball generation.");
+                _emeraldRock = emeraldRock;
             }
         }
 
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
-        public static void Update_postfix()
+        public static async void Update_postfix()
         {
-            if (Time.time - lastUpdate >= updateInterval && _rock != null)
+            //log the update
+            ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
+            Logger.Sources.Add(logger);
+
+            if (_emeraldRock)
             {
-                lastUpdate = Time.time;
-                Task.Run(() => UpdateBallPosition());
+                Vector3 emeraldRockPosition = _emeraldRock.transform.position;
+                logger.LogInfo($"Emerald Rock position: {emeraldRockPosition}");
+
+                // Replace "your-username" with the actual username you want to send
+                string username = "test";
+                await SendRockPositionToServer(username, emeraldRockPosition);
             }
         }
 
-        private static async Task UpdateBallPosition()
+        private static async Task SendRockPositionToServer(string userId, Vector3 position)
         {
-            var content = new StringContent($"{{\"userId\": \"{userId}\", \"points\": {_rock.transform.position.y}}}", Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("http://91.107.224.122:5001/api/v1/User", content);
-            if (response.IsSuccessStatusCode)
+            string url = "http://91.107.224.122:5001/api/v1/User";
+            var data = new
             {
-                logger.LogInfo($"Rock position updated: {_rock.transform.position.y}");
+                userid = userId,
+                points = position.ToString()
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+
+            try
+            {
+                var response = await client.PostAsync(url, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    Logger.LogInfo("Data successfully sent to server");
+                }
+                else
+                {
+                    Logger.LogError($"Failed to send data to server. Status code: {response.StatusCode}");
+                }
             }
-            else
+            catch (HttpRequestException e)
             {
-                logger.LogError("Failed to update rock position.");
+                Logger.LogError($"Request error: {e.Message}");
             }
         }
     }

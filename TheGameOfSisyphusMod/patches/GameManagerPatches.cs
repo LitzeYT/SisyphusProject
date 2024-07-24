@@ -21,7 +21,7 @@ namespace TheGameOfSisyphusMod.patches
         {
             //log the ball generation
             ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
-            Logger.Sources.Add(logger);
+            BepInEx.Logging.Logger.Sources.Add(logger);
 
             logger.LogInfo("Ball generated");
 
@@ -39,7 +39,7 @@ namespace TheGameOfSisyphusMod.patches
         {
             //log the update
             ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
-            Logger.Sources.Add(logger);
+            BepInEx.Logging.Logger.Sources.Add(logger);
 
             if (_emeraldRock)
             {
@@ -47,7 +47,7 @@ namespace TheGameOfSisyphusMod.patches
                 logger.LogInfo($"Emerald Rock position: {emeraldRockPosition}");
 
                 // Replace "your-username" with the actual username you want to send
-                string username = "test";
+                string username = "your-username";
                 await SendRockPositionToServer(username, emeraldRockPosition);
             }
         }
@@ -68,16 +68,16 @@ namespace TheGameOfSisyphusMod.patches
                 var response = await client.PostAsync(url, content);
                 if (response.IsSuccessStatusCode)
                 {
-                    Logger.LogInfo("Data successfully sent to server");
+                    BepInEx.Logging.Logger.LogInfo("Data successfully sent to server");
                 }
                 else
                 {
-                    Logger.LogError($"Failed to send data to server. Status code: {response.StatusCode}");
+                    BepInEx.Logging.Logger.LogError($"Failed to send data to server. Status code: {response.StatusCode}");
                 }
             }
             catch (HttpRequestException e)
             {
-                Logger.LogError($"Request error: {e.Message}");
+                BepInEx.Logging.Logger.LogError($"Request error: {e.Message}");
             }
         }
     }

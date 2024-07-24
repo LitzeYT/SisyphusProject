@@ -37,12 +37,10 @@ namespace TheGameOfSisyphusMod.patches
             // Find Rock(Clone) and log its position
             GameObject rock = GameObject.Find("EmeraldRock(Clone)");
 
-            if(rock != null)
+            if (rock != null)
             {
                 logger.LogInfo($"Rock position: {rock.transform.position.y}");
             }
-
-
 
             if (rock != null && _rock == null)
             {
@@ -54,7 +52,8 @@ namespace TheGameOfSisyphusMod.patches
         private static async Task NotifyBallGenerated()
         {
             logger.LogInfo("Notifying server of ball generation.");
-            var response = await client.PostAsync($"http://91.107.224.122:5001/api/v1/User/{userId}/{_rock.transform.position.y}", new StringContent(""));
+            var content = new StringContent($"{{\"userId\": \"{userId}\", \"points\": {_rock.transform.position.y}}}", Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("http://91.107.224.122:5001/api/v1/User", content);
             if (response.IsSuccessStatusCode)
             {
                 logger.LogInfo("Server notified of ball generation.");
@@ -78,7 +77,8 @@ namespace TheGameOfSisyphusMod.patches
 
         private static async Task UpdateBallPosition()
         {
-            var response = await client.PostAsync($"http://91.107.224.122:5001/api/v1/User/{userId}/{_rock.transform.position.y}", new StringContent(""));
+            var content = new StringContent($"{{\"userId\": \"{userId}\", \"points\": {_rock.transform.position.y}}}", Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("http://91.107.224.122:5001/api/v1/User", content);
             if (response.IsSuccessStatusCode)
             {
                 logger.LogInfo($"Rock position updated: {_rock.transform.position.y}");

@@ -1,88 +1,108 @@
-﻿using System.Net.Http;
+﻿using System.Collections;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
-using Newtonsoft.Json;
-using System.Numerics;
+using UnityEngine.Networking;
 
 namespace TheGameOfSisyphusMod.patches
 {
     [HarmonyPatch(typeof(GameManager))]
-    public class GameManagerPatches
+    public class GameManagerPatches : MonoBehaviour
     {
         private static GameObject _emeraldRock;
-        private static readonly HttpClient client = new HttpClient();
+        private const string Url = "https://hobauflock.cloud/api/v1/User/";
+        private const float Interval = 5f; // Interval in seconds
+        private static ManualLogSource _logger;
+
+        static GameManagerPatches()
+        {
+            _logger = new ManualLogSource("TheGameOfSisyphusMod");
+            BepInEx.Logging.Logger.Sources.Add(_logger);
+        }
 
         [HarmonyPatch("GenerateBall")]
         [HarmonyPostfix]
         public static void GenerateBall_postfix()
         {
-            //log the ball generation
-            ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
-            BepInEx.Logging.Logger.Sources.Add(logger);
+            _logger.LogInfo("Ball generated");
 
-            logger.LogInfo("Ball generated");
-
-            //find EmeraldRock(Clone) and log its position
-            GameObject emeraldRock = GameObject.Find("EmeraldRock(Clone)");
-            if (emeraldRock != null && _emeraldRock == null)
+            if (_emeraldRock == null)
             {
-                _emeraldRock = emeraldRock;
+                _emeraldRock = GameObject.Find("EmeraldRock(Clone)");
+            }
+
+            _logger.LogInfo("EmeraldRock: " + _emeraldRock);
+
+            if (_emeraldRock != null)
+            {
+                MonoBehaviourSingleton.Instance.StartCoroutine(SendRockPositionToServer("TestSisyphus", _emeraldRock));
             }
         }
 
-        [HarmonyPatch("Update")]
-        [HarmonyPostfix]
-        public static async void Update_postfix()
+        private static IEnumerator SendRockPositionToServer(string userId, GameObject stone)
         {
-            //log the update
-            ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
-            BepInEx.Logging.Logger.Sources.Add(logger);
+            while (true)
+            {                
+                _logger.LogInfo("Sending data to server");
 
-            if (_emeraldRock)
-            {
-                UnityEngine.Vector3 emeraldRockPosition = _emeraldRock.transform.position;
-                logger.LogInfo($"Emerald Rock position: {emeraldRockPosition}");
+                int height = (int)(stone.transform.position.y * 100);
+                string ls = Url + userId + "/" + height;
+                _logger.LogInfo("URL: " + ls);
+                using (UnityWebRequest request = new UnityWebRequest(ls, "POST"))
+                {
+                    
+                    request.downloadHandler = new DownloadHandlerBuffer();
 
-                // Replace "your-username" with the actual username you want to send
-                string username = "your-username";
-                await SendRockPositionToServer(username, emeraldRockPosition);
+                    yield return request.SendWebRequest();
+
+                    if (request.result == UnityWebRequest.Result.Success)
+                    {
+                        _logger.LogInfo("Data sent to server");
+                    }
+                    else
+                    {
+                        _logger.LogError("Error sending data to server: " + request.error);
+                    }
+                }
+
+                yield return new WaitForSeconds(Interval);
             }
         }
 
-        private static async Task SendRockPositionToServer(string userId, UnityEngine.Vector3 position)
+        [System.Serializable]
+        public class PositionData
         {
-            string url = "http://91.107.224.122:5001/api/v1/User";
-            var data = new
-            {
-                userid = userId,
-                points = position.ToString()
-            };
+            public string UserId;
+            public Vector3Data Points;
+        }
 
-            var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+        [System.Serializable]
+        public class Vector3Data
+        {
+            public float X;
+            public float Y;
+            public float Z;
+        }
+    }
 
-            
-            //log the update
-            ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
-            BepInEx.Logging.Logger.Sources.Add(logger);
-            
-            try
+    // Singleton class to provide access to StartCoroutine
+    public class MonoBehaviourSingleton : MonoBehaviour
+    {
+        private static MonoBehaviourSingleton _instance;
+
+        public static MonoBehaviourSingleton Instance
+        {
+            get
             {
-                var response = await client.PostAsync(url, content);
-                if (response.IsSuccessStatusCode)
+                if (_instance == null)
                 {
-                    logger.LogInfo("Data successfully sent to server");
+                    GameObject go = new GameObject("MonoBehaviourSingleton");
+                    _instance = go.AddComponent<MonoBehaviourSingleton>();
                 }
-                else
-                {
-                    logger.LogError($"Failed to send data to server. Status code: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException e)
-            {
-                logger.LogError($"Request error: {e.Message}");
+                return _instance;
             }
         }
     }

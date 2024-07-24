@@ -161,6 +161,9 @@
         <Reference Include="netstandard">
           <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\The Game of Sisyphus\The Game of Sisyphus_Data\Managed\netstandard.dll</HintPath>
         </Reference>
+        <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+          <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+        </Reference>
         <Reference Include="OccaSoftware.Buto.Demo">
           <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\The Game of Sisyphus\The Game of Sisyphus_Data\Managed\OccaSoftware.Buto.Demo.dll</HintPath>
         </Reference>
@@ -559,6 +562,7 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
+      <None Include="App.config" />
       <None Include="packages.config" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

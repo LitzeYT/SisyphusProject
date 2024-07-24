@@ -43,7 +43,7 @@ namespace TheGameOfSisyphusMod.patches
 
             if (_emeraldRock)
             {
-                Vector3 emeraldRockPosition = _emeraldRock.transform.position;
+                UnityEngine.Vector3 emeraldRockPosition = _emeraldRock.transform.position;
                 logger.LogInfo($"Emerald Rock position: {emeraldRockPosition}");
 
                 // Replace "your-username" with the actual username you want to send
@@ -52,7 +52,7 @@ namespace TheGameOfSisyphusMod.patches
             }
         }
 
-        private static async Task SendRockPositionToServer(string userId, Vector3 position)
+        private static async Task SendRockPositionToServer(string userId, UnityEngine.Vector3 position)
         {
             string url = "http://91.107.224.122:5001/api/v1/User";
             var data = new
@@ -63,21 +63,26 @@ namespace TheGameOfSisyphusMod.patches
 
             var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
 
+            
+            //log the update
+            ManualLogSource logger = new ManualLogSource("TheGameOfSisyphusMod");
+            BepInEx.Logging.Logger.Sources.Add(logger);
+            
             try
             {
                 var response = await client.PostAsync(url, content);
                 if (response.IsSuccessStatusCode)
                 {
-                    BepInEx.Logging.Logger.LogInfo("Data successfully sent to server");
+                    logger.LogInfo("Data successfully sent to server");
                 }
                 else
                 {
-                    BepInEx.Logging.Logger.LogError($"Failed to send data to server. Status code: {response.StatusCode}");
+                    logger.LogError($"Failed to send data to server. Status code: {response.StatusCode}");
                 }
             }
             catch (HttpRequestException e)
             {
-                BepInEx.Logging.Logger.LogError($"Request error: {e.Message}");
+                logger.LogError($"Request error: {e.Message}");
             }
         }
     }

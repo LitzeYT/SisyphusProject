@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        var userinfos = [];
+
+        var getUserInfo = () => {
+            var httpx = new XMLHttpRequest();
+            httpx.onreadystatechange = () => {
+                if (httpx.readyState == 4 && httpx.status >= 400) {
+                    alert(httpx.responseText);
+                } else if (httpx.readyState == 4 && httpx.status == 200) {
+                    userinfos = JSON.parse(httpx.responseText);
+                    if (userinfos.length > 4) {
+                        userinfos = userinfos.splice(0, 4)
+                    }
+                    console.log(userinfos);
+                    updateTable();
+                }
+            };
+            httpx.open("GET", "https://hobauflock.cloud/api/v1/User/ranking")
+            httpx.setRequestHeader("Access-Control-Allow-Origin", "*");
+		    httpx.setRequestHeader("Access-Control-Allow-Credentials", "true");
+            httpx.setRequestHeader("Access-Control-Allow-Methods", "*");
+            httpx.setRequestHeader("Access-Control-Allow-Headers", "*");
+            httpx.setRequestHeader("Content-type", "application/json");
+            httpx.send();
+        };
+
+        var updateTable = () => {
+            var players = Array.from(document.querySelectorAll('.player'));
+            for (var i = 0; i < userinfos.length; i++) {
+                players[i].innerHTML = `${userinfos[i].userId} ${userinfos[i].points}`;
+            }
+        }
+        setInterval(() => getUserInfo(), 1000);
+    </script>
+</head>
+<body>
+    <div>
+        <p class="player">...</p>
+        <p class="player">...</p>
+        <p class="player">...</p>
+        <p class="player">...</p>
+    </div>
+</body>
+</html>

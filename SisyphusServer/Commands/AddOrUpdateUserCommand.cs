@@ -15,7 +15,6 @@ namespace SisyphusServer.Commands {
 
     public class AddOrUpdateUserCommandValidator : AbstractValidator<AddOrUpdateUserCommand> {
         public AddOrUpdateUserCommandValidator() {
-            var a = this;
             RuleFor(command => command.UserId)
                 .Must(userId => !string.IsNullOrWhiteSpace(userId)).WithMessage("No userid provided")
                 .MinimumLength(3).WithMessage("Userid to small")

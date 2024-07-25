@@ -10,6 +10,13 @@ namespace SisyphusServer.Controllers {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
     public class UserController : ApiControllerBase {
+        [HttpGet("{userid}")]
+        [ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<UserInfo>> GetUserById(string userid) {
+            return await Sender.Send(new GetUserByIdQuery { UserId = userid });
+        }
+
         [HttpGet("ranking")]
         [ProducesResponseType(typeof(List<UserInfo>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

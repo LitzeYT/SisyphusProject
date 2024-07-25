@@ -30,7 +30,7 @@ namespace SisyphusServer.Controllers {
         public async Task<ActionResult<UserInfo>> AddOrUpdateUser(string userid, long points) {
             return await Sender.Send(new AddOrUpdateUserCommand { 
                 UserId = userid,
-                Points = points
+                Points = (long)(points / 100) 
             });
         }
 

@@ -15,7 +15,7 @@ namespace TheGameOfSisyphusMod.patches
     {
         private static GameObject _emeraldRock;
         private const string Url = "https://hobauflock.cloud/api/v1/User/";
-        private const float Interval = 5f; // Interval in seconds
+        private const float Interval = 1f; // Interval in seconds
         private static ManualLogSource _logger;
         private static string UserId = "";
 
